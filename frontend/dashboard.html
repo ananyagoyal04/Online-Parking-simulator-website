@@ -1,0 +1,1395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#1a2e1a">
+  <title>ParkWise · Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+
+  <!-- QRCode with 2-CDN fallback, eager load -->
+  <script>
+    (function(){
+      var urls = [
+        'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js',
+        'https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js'
+      ];
+      var i = 0;
+      function load() {
+        var s = document.createElement('script');
+        s.src = urls[i];
+        s.onload = function(){ window._qrReady = true; };
+        s.onerror = function(){ if(++i < urls.length) load(); };
+        document.head.appendChild(s);
+      }
+      load();
+    })();
+
+    function loadQR(cb) {
+      if (window.QRCode) return cb();
+      var tries = 0;
+      var iv = setInterval(function(){
+        if (window.QRCode || ++tries > 30) { clearInterval(iv); cb(); }
+      }, 100);
+    }
+  </script>
+
+  <style>
+    /* ── Variables ───────────────────────────── */
+    :root {
+      --ivory:   #f7f3ee;
+      --ivory2:  #ede8e0;
+      --forest:  #1a2e1a;
+      --forest2: #243824;
+      --forest3: #2f4a2f;
+      --gold:    #c9a84c;
+      --gold2:   #e8c97a;
+      --text:    #2c2c2c;
+      --muted:   #8a8070;
+      --border:  rgba(44,44,44,0.1);
+      --sidebar: #f0ebe2;
+      --card:    #ffffff;
+      --red:     #c0392b;
+      --green:   #2e7d32;
+      --orange:  #e65100;
+      --r:       12px;
+    }
+    [data-theme="dark"] {
+      --ivory:   #0f150f;
+      --ivory2:  #141e14;
+      --forest:  #e8e0d4;
+      --forest2: #c9bfae;
+      --forest3: #a89e8e;
+      --gold:    #c9a84c;
+      --gold2:   #e8c97a;
+      --text:    #e0d8cc;
+      --muted:   #6a6050;
+      --border:  rgba(255,255,255,0.08);
+      --sidebar: #111811;
+      --card:    #182018;
+      --red:     #ef5350;
+      --green:   #66bb6a;
+      --orange:  #ffa726;
+    }
+
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+    html { font-size: 16px; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--ivory2);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    /* ── HEADER ───────────────────────────────── */
+    header {
+      height: 58px;
+      background: var(--forest);
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      gap: 16px;
+      flex-shrink: 0;
+      z-index: 100;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+    }
+    [data-theme="dark"] header { background: #0d140d; border-bottom: 1px solid var(--border); }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      text-decoration: none;
+      flex-shrink: 0;
+    }
+    .brand-icon {
+      width: 32px; height: 32px;
+      background: var(--gold);
+      border-radius: 7px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      font-weight: bold;
+      color: #fff;
+    }
+    .brand-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 20px;
+      font-weight: 600;
+      color: #fff;
+      letter-spacing: 0.3px;
+    }
+    .brand-name span { color: var(--gold); }
+
+    /* Search bar */
+    .search-wrap {
+      flex: 1;
+      max-width: 420px;
+      position: relative;
+    }
+    .search-input {
+      width: 100%;
+      padding: 9px 14px 9px 38px;
+      background: rgba(255,255,255,0.1);
+      border: 1.5px solid rgba(255,255,255,0.15);
+      border-radius: 9px;
+      color: #fff;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      outline: none;
+      transition: all 0.2s;
+    }
+    .search-input::placeholder { color: rgba(255,255,255,0.4); }
+    .search-input:focus {
+      background: rgba(255,255,255,0.15);
+      border-color: var(--gold);
+    }
+    .search-icon {
+      position: absolute;
+      left: 12px; top: 50%;
+      transform: translateY(-50%);
+      font-size: 14px;
+      pointer-events: none;
+    }
+    .search-dropdown {
+      position: absolute;
+      top: calc(100% + 6px); left: 0; right: 0;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 12px 32px rgba(0,0,0,0.15);
+      z-index: 200;
+      display: none;
+      max-height: 280px;
+      overflow-y: auto;
+    }
+    .search-dropdown.open { display: block; animation: dropIn 0.2s ease; }
+    @keyframes dropIn { from{opacity:0;transform:translateY(-6px)} to{opacity:1;transform:none} }
+    .search-item {
+      padding: 11px 16px;
+      cursor: pointer;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.15s;
+    }
+    .search-item:last-child { border-bottom: none; }
+    .search-item:hover { background: var(--ivory2); }
+    [data-theme="dark"] .search-item:hover { background: var(--ivory); }
+    .search-item-name { font-weight: 500; color: var(--text); }
+    .search-item-coord { font-size: 11px; color: var(--muted); }
+
+    /* Header right */
+    .header-right {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .hdr-pill {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 20px;
+      padding: 5px 13px;
+      font-size: 12px;
+      color: rgba(255,255,255,0.85);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .live-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--gold);
+      animation: blink 2s infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    .hdr-btn {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      color: rgba(255,255,255,0.7);
+      padding: 7px 13px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 12px;
+      font-family: 'DM Sans', sans-serif;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      width: auto;
+    }
+    .hdr-btn:hover { background: rgba(255,255,255,0.14); color: #fff; }
+
+    /* ── LAYOUT ───────────────────────────────── */
+    .main {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* ── SIDEBAR ──────────────────────────────── */
+    .sidebar {
+      width: 320px;
+      background: var(--sidebar);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      flex-shrink: 0;
+      transition: background 0.3s;
+    }
+
+    /* Sidebar section header */
+    .sb-section {
+      padding: 14px 16px 8px;
+      font-size: 10px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* GPS row */
+    .gps-row {
+      padding: 12px 14px;
+      display: flex;
+      gap: 8px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .gps-btn {
+      flex: 1;
+      padding: 10px 12px;
+      background: var(--forest);
+      color: #fff;
+      border: none;
+      border-radius: 9px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    [data-theme="dark"] .gps-btn { background: var(--gold); color: #111; }
+    .gps-btn:hover { opacity: 0.88; transform: translateY(-1px); }
+    .gps-btn:disabled { opacity: 0.5; pointer-events: none; }
+
+    /* Legend */
+    .legend-row {
+      padding: 8px 14px;
+      display: flex;
+      gap: 14px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .leg { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--muted); }
+    .ldot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+
+    /* Active booking card */
+    .booking-card {
+      margin: 12px;
+      padding: 14px 16px;
+      background: var(--forest);
+      border-radius: 12px;
+      display: none;
+      flex-shrink: 0;
+      position: relative;
+      overflow: hidden;
+    }
+    [data-theme="dark"] .booking-card { background: rgba(201,168,76,0.1); border: 1px solid rgba(201,168,76,0.2); }
+    .booking-card::before {
+      content: '';
+      position: absolute;
+      right: -20px; top: -20px;
+      width: 100px; height: 100px;
+      background: rgba(201,168,76,0.12);
+      border-radius: 50%;
+    }
+    .booking-card.visible { display: block; animation: slideDown 0.3s ease; }
+    @keyframes slideDown { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:none} }
+    .bc-label {
+      font-size: 10px; text-transform: uppercase;
+      letter-spacing: 1.5px; color: var(--gold); margin-bottom: 4px; font-weight: 500;
+    }
+    .bc-id {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 22px; font-weight: 600;
+      color: #fff; margin-bottom: 2px;
+    }
+    [data-theme="dark"] .bc-id { color: var(--gold2); }
+    .bc-spot { font-size: 12px; color: rgba(255,255,255,0.6); margin-bottom: 12px; }
+    [data-theme="dark"] .bc-spot { color: var(--muted); }
+    .bc-meta {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .bc-meta-item { font-size: 11px; }
+    .bc-meta-label { color: rgba(255,255,255,0.4); margin-bottom: 2px; }
+    [data-theme="dark"] .bc-meta-label { color: var(--muted); }
+    .bc-meta-val { color: var(--gold); font-weight: 500; }
+    .bc-btns { display: flex; gap: 8px; }
+    .bc-btn {
+      flex: 1; padding: 8px; border-radius: 8px;
+      font-size: 12px; font-family: 'DM Sans', sans-serif;
+      font-weight: 500; cursor: pointer; border: none;
+      transition: all 0.2s; width: auto;
+    }
+    .bc-qr { background: var(--gold); color: #1a1a1a; }
+    .bc-qr:hover { background: var(--gold2); }
+    .bc-cancel { background: transparent; color: rgba(255,255,255,0.5); border: 1px solid rgba(255,255,255,0.15) !important; }
+    [data-theme="dark"] .bc-cancel { color: var(--muted); border-color: var(--border) !important; }
+    .bc-cancel:hover { background: rgba(200,50,50,0.2); color: #ff8080; border-color: rgba(200,50,50,0.4) !important; }
+
+    /* Spots list */
+    .spots-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px;
+    }
+    .spots-list::-webkit-scrollbar { width: 3px; }
+    .spots-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    .spot-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-bottom: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .spot-card::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 3px;
+      border-radius: 3px 0 0 3px;
+    }
+    .spot-card.empty::before   { background: var(--green); }
+    .spot-card.full::before    { background: var(--red); }
+    .spot-card.reserved::before{ background: var(--orange); }
+    .spot-card:hover { border-color: var(--gold); transform: translateX(2px); }
+    .spot-card.mine  { background: rgba(201,168,76,0.06); border-color: rgba(201,168,76,0.3); }
+
+    .sc-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+    .sc-name { font-size: 12px; font-weight: 500; color: var(--text); flex: 1; margin-right: 8px; }
+    .sc-badge {
+      font-size: 10px; padding: 2px 8px; border-radius: 20px;
+      font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; flex-shrink: 0;
+    }
+    .badge-e { background: rgba(46,125,50,0.1);  color: var(--green); }
+    .badge-f { background: rgba(192,57,43,0.1);  color: var(--red); }
+    .badge-r { background: rgba(230,81,0,0.1);   color: var(--orange); }
+
+    .sc-meta { display: flex; align-items: center; gap: 12px; }
+    .sc-rate { font-size: 11px; color: var(--muted); }
+    .sc-rate strong { color: var(--text); }
+    .sc-dist { font-size: 11px; color: var(--muted); margin-left: auto; }
+
+    .sc-book-btn {
+      margin-top: 8px;
+      width: 100%;
+      padding: 7px;
+      background: var(--forest);
+      color: #fff;
+      border: none;
+      border-radius: 7px;
+      font-size: 11px;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    [data-theme="dark"] .sc-book-btn { background: var(--gold); color: #111; }
+    .sc-book-btn:hover { opacity: 0.85; }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.8;
+    }
+    .empty-state-icon { font-size: 36px; margin-bottom: 12px; display: block; opacity: 0.5; }
+
+    /* Sidebar footer stats */
+    .sb-stats {
+      padding: 10px 14px;
+      border-top: 1px solid var(--border);
+      display: none;
+      gap: 16px;
+      flex-shrink: 0;
+    }
+    .sb-stats.show { display: flex; }
+    .sb-stat { font-size: 11px; color: var(--muted); }
+    .sb-stat strong { color: var(--text); font-weight: 500; }
+
+    /* ── MAP AREA ─────────────────────────────── */
+    .map-wrap {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+    #map { width: 100%; height: 100%; }
+
+    /* Map overlay buttons */
+    .map-controls {
+      position: absolute;
+      top: 14px; right: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 10;
+    }
+    .map-ctrl-btn {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      padding: 9px 13px;
+      font-size: 12px;
+      font-family: 'DM Sans', sans-serif;
+      color: var(--text);
+      cursor: pointer;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+      width: auto;
+    }
+    .map-ctrl-btn:hover { border-color: var(--gold); box-shadow: 0 4px 14px rgba(0,0,0,0.15); }
+
+    /* Map info bar (bottom) */
+    .map-info-bar {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      background: var(--card);
+      border-top: 1px solid var(--border);
+      padding: 9px 16px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-size: 12px;
+      color: var(--muted);
+      z-index: 10;
+    }
+    .mib-item { display: flex; align-items: center; gap: 5px; }
+    .mib-dot  { width: 8px; height: 8px; border-radius: 50%; }
+
+    /* ── QR MODAL ─────────────────────────────── */
+    .overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.55);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(8px);
+    }
+    .overlay.open { display: flex; }
+
+    .modal {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 36px 32px;
+      width: 360px;
+      max-width: 92vw;
+      text-align: center;
+      animation: popIn 0.3s cubic-bezier(0.16,1,0.3,1);
+      box-shadow: 0 40px 80px rgba(0,0,0,0.25);
+      position: relative;
+    }
+    @keyframes popIn {from{transform:scale(0.88);opacity:0}to{transform:scale(1);opacity:1}}
+
+    .modal-close {
+      position: absolute;
+      top: 14px; right: 14px;
+      background: var(--ivory2);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 4px 10px;
+      cursor: pointer;
+      font-size: 12px;
+      color: var(--muted);
+      font-family: 'DM Sans', sans-serif;
+      width: auto;
+    }
+    .modal-close:hover { color: var(--red); border-color: var(--red); background: transparent; }
+
+    .modal-eyebrow {
+      font-size: 10px; text-transform: uppercase; letter-spacing: 2px;
+      color: var(--gold); margin-bottom: 6px; font-weight: 500;
+    }
+    .modal-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 26px; font-weight: 600;
+      color: var(--text); margin-bottom: 4px;
+    }
+    .modal-sub { font-size: 12px; color: var(--muted); margin-bottom: 20px; }
+
+    #qrcode-box {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 0 auto 20px;
+      background: white;
+      border-radius: 12px;
+      padding: 16px;
+      min-height: 232px;
+      width: 232px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    }
+
+    .qr-info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 18px;
+      text-align: left;
+    }
+    .qr-info-item { background: var(--ivory2); border-radius: 8px; padding: 10px 12px; }
+    [data-theme="dark"] .qr-info-item { background: var(--ivory); }
+    .qr-info-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 3px; }
+    .qr-info-val { font-size: 13px; font-weight: 500; color: var(--text); }
+
+    .modal-btn {
+      width: 100%;
+      padding: 13px;
+      background: var(--forest);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    [data-theme="dark"] .modal-btn { background: var(--gold); color: #111; }
+    .modal-btn:hover { opacity: 0.88; }
+
+    /* ── TOAST ────────────────────────────────── */
+    .toast-container {
+      position: fixed;
+      bottom: 50px; right: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 9999;
+    }
+    .toast {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 11px 16px;
+      font-size: 13px;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+      animation: toastIn 0.3s ease;
+      max-width: 300px;
+    }
+    .toast.ok  { border-left: 3px solid var(--green); }
+    .toast.err { border-left: 3px solid var(--red); }
+    .toast.info{ border-left: 3px solid var(--gold); }
+    @keyframes toastIn { from{opacity:0;transform:translateX(20px)} to{opacity:1;transform:none} }
+
+    /* ── Loading overlay ──────────────────────── */
+    .page-loader {
+      position: fixed; inset: 0;
+      background: var(--ivory);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      z-index: 9999;
+      transition: opacity 0.4s;
+    }
+    .page-loader.hidden { opacity: 0; pointer-events: none; }
+    .loader-brand {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 36px; font-weight: 600;
+      color: var(--forest);
+      margin-bottom: 24px;
+    }
+    [data-theme="dark"] .loader-brand { color: var(--gold); }
+    .loader-bar-wrap {
+      width: 160px; height: 2px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .loader-bar {
+      height: 100%;
+      background: var(--gold);
+      border-radius: 2px;
+      animation: loadBar 1.2s ease-in-out infinite;
+    }
+    @keyframes loadBar {
+      0%   { width: 0%; margin-left: 0; }
+      50%  { width: 70%; margin-left: 0; }
+      100% { width: 0%;  margin-left: 100%; }
+    }
+
+    /* ── Mobile responsive ────────────────────── */
+    @media (max-width: 768px) {
+      .main { flex-direction: column; }
+      .sidebar {
+        width: 100%;
+        height: 45vh;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+      }
+      .search-wrap { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Page loader -->
+<div class="page-loader" id="pageLoader">
+  <div class="loader-brand">ParkWise</div>
+  <div class="loader-bar-wrap"><div class="loader-bar"></div></div>
+</div>
+
+<!-- HEADER -->
+<header>
+  <a class="brand" href="index.html">
+    <div class="brand-icon">🅿</div>
+    <div class="brand-name">Park<span>Wise</span></div>
+  </a>
+
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input class="search-input" id="searchInput" type="text"
+      placeholder="Search Bangalore areas — Koramangala, Whitefield…"
+      autocomplete="off">
+    <div class="search-dropdown" id="searchDrop"></div>
+  </div>
+
+  <div class="header-right">
+    <div class="hdr-pill">
+      <div class="live-dot"></div>
+      <span id="locLabel">Locating…</span>
+    </div>
+    <button class="hdr-btn" onclick="toggleTheme()" id="themeBtn">☀</button>
+    <button class="hdr-btn" onclick="locateMe()">📍 My Location</button>
+    <button class="hdr-btn" onclick="logout()">← Sign Out</button>
+  </div>
+</header>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="gps-row">
+      <button class="gps-btn" id="gpsBtn" onclick="locateMe()">
+        📍 Use My Location
+      </button>
+      <button class="gps-btn" style="flex:0 0 auto;padding:10px;" onclick="loadSpots()" title="Refresh spots">
+        ⟳
+      </button>
+    </div>
+
+    <div class="legend-row">
+      <div class="leg"><div class="ldot" style="background:var(--green)"></div> Available</div>
+      <div class="leg"><div class="ldot" style="background:var(--red)"></div> Full</div>
+      <div class="leg"><div class="ldot" style="background:var(--orange)"></div> Reserved</div>
+    </div>
+
+    <!-- Active booking card -->
+    <div class="booking-card" id="bookingCard">
+      <div class="bc-label">⚡ Active Booking</div>
+      <div class="bc-id" id="bcId">—</div>
+      <div class="bc-spot" id="bcSpot">—</div>
+      <div class="bc-meta">
+        <div class="bc-meta-item">
+          <div class="bc-meta-label">Rate</div>
+          <div class="bc-meta-val" id="bcRate">—</div>
+        </div>
+        <div class="bc-meta-item">
+          <div class="bc-meta-label">Area</div>
+          <div class="bc-meta-val" id="bcArea">—</div>
+        </div>
+        <div class="bc-meta-item">
+          <div class="bc-meta-label">Time</div>
+          <div class="bc-meta-val" id="bcTime">—</div>
+        </div>
+      </div>
+      <div class="bc-btns">
+        <button class="bc-btn bc-qr" onclick="showQR()">📱 QR Pass</button>
+        <button class="bc-btn bc-cancel" onclick="cancelBooking()">✕ Cancel</button>
+      </div>
+    </div>
+
+    <!-- Spots list -->
+    <div class="spots-list" id="spotsList">
+      <div class="empty-state">
+        <span class="empty-state-icon">📍</span>
+        Press <strong>Use My Location</strong><br>or search an area<br>to see nearby parking
+      </div>
+    </div>
+
+    <div class="sb-stats" id="sbStats">
+      <div class="sb-stat"><strong id="stAvail">0</strong> available</div>
+      <div class="sb-stat"><strong id="stTotal">0</strong> total</div>
+      <div class="sb-stat" id="stArea" style="margin-left:auto;font-size:10px;"></div>
+    </div>
+  </div>
+
+  <!-- MAP -->
+  <div class="map-wrap">
+    <div id="map"></div>
+
+    <!-- Map overlay controls -->
+    <div class="map-controls">
+      <button class="map-ctrl-btn" onclick="toggleSatellite()" id="satBtn">🛰 Satellite View</button>
+      <button class="map-ctrl-btn" onclick="toggleMapStyle()">🗺 Toggle Style</button>
+      <button class="map-ctrl-btn" onclick="fitAllMarkers()">⊡ Fit All</button>
+      <button class="map-ctrl-btn" onclick="showNearestParking()">⚡ Nearest Spot</button>
+    </div>
+
+    <!-- Map info bar -->
+    <div class="map-info-bar">
+      <div class="mib-item"><div class="mib-dot" style="background:var(--green)"></div> Available</div>
+      <div class="mib-item"><div class="mib-dot" style="background:var(--red)"></div> Full</div>
+      <div class="mib-item"><div class="mib-dot" style="background:var(--orange)"></div> Reserved</div>
+      <div class="mib-item" style="margin-left:auto;"><div class="mib-dot" style="background:#4285f4"></div> You</div>
+      <span id="mapAreaLabel" style="margin-left:8px;color:var(--text);font-weight:500"></span>
+    </div>
+  </div>
+</div>
+
+<!-- QR MODAL -->
+<div class="overlay" id="qrOverlay">
+  <div class="modal">
+    <button class="modal-close" onclick="closeQR()">✕ Close</button>
+    <div class="modal-eyebrow">ParkWise · Booking Pass</div>
+    <div class="modal-title">Entry QR Code</div>
+    <div class="modal-sub" id="qrSub">Scan at the parking gate</div>
+    <div id="qrcode-box"></div>
+    <div class="qr-info-grid" id="qrInfoGrid"></div>
+    <button class="modal-btn" onclick="closeQR()">Done</button>
+  </div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+  // ── Auth guard ──────────────────────────────
+  const username = localStorage.getItem("pw-username");
+  if (!localStorage.getItem("pw-loggedIn") || !username) {
+    window.location = "index.html";
+  }
+
+  // ── Theme ───────────────────────────────────
+  const savedTheme = localStorage.getItem("pw-theme") || "light";
+  applyTheme(savedTheme);
+
+  function applyTheme(t) {
+    document.documentElement.setAttribute("data-theme", t);
+    document.getElementById("themeBtn").textContent = t === "dark" ? "☀" : "☾";
+    localStorage.setItem("pw-theme", t);
+  }
+  function toggleTheme() {
+    const cur = document.documentElement.getAttribute("data-theme") || "light";
+    applyTheme(cur === "dark" ? "light" : "dark");
+  }
+
+  function logout() {
+    localStorage.removeItem("pw-loggedIn");
+    localStorage.removeItem("pw-username");
+    window.location = "index.html";
+  }
+
+  // ── Toast ───────────────────────────────────
+  function toast(msg, type = "info") {
+    const icons = { ok:"✓", err:"✕", info:"ℹ" };
+    const el = document.createElement("div");
+    el.className = `toast ${type}`;
+    el.innerHTML = `<span>${icons[type] || "•"}</span>${msg}`;
+    document.getElementById("toastContainer").appendChild(el);
+    setTimeout(() => el.remove(), 3500);
+  }
+
+  // ── State ───────────────────────────────────
+  let map, mapDark = false;
+  let markers = [], userMarker = null, userLat = null, userLng = null;
+  let currentBooking = null;
+  let currentAreaName = "";
+
+  // ── Map styles ──────────────────────────────
+  const STYLE_LIGHT = [];
+  const STYLE_WARM = [
+    {elementType:"geometry",        stylers:[{color:"#f5efe6"}]},
+    {elementType:"labels.text.stroke",stylers:[{color:"#f5efe6"}]},
+    {elementType:"labels.text.fill",stylers:[{color:"#7a6a55"}]},
+    {featureType:"road",elementType:"geometry",stylers:[{color:"#e8dece"}]},
+    {featureType:"road",elementType:"labels.text.fill",stylers:[{color:"#9a8870"}]},
+    {featureType:"water",elementType:"geometry",stylers:[{color:"#c9dde8"}]},
+    {featureType:"poi.park",elementType:"geometry",stylers:[{color:"#d4e8c8"}]},
+    {featureType:"poi",elementType:"labels.text.fill",stylers:[{color:"#9a8870"}]},
+    {featureType:"transit",stylers:[{visibility:"off"}]},
+  ];
+  const STYLE_DARK = [
+    {elementType:"geometry",        stylers:[{color:"#1a2010"}]},
+    {elementType:"labels.text.stroke",stylers:[{color:"#1a2010"}]},
+    {elementType:"labels.text.fill",stylers:[{color:"#6a7a5a"}]},
+    {featureType:"road",elementType:"geometry",stylers:[{color:"#283820"}]},
+    {featureType:"road",elementType:"labels.text.fill",stylers:[{color:"#4a5a3a"}]},
+    {featureType:"water",elementType:"geometry",stylers:[{color:"#0d1810"}]},
+    {featureType:"poi",stylers:[{visibility:"off"}]},
+    {featureType:"transit",stylers:[{visibility:"off"}]},
+  ];
+  let styleIdx = 0;
+  const STYLES = [STYLE_WARM, STYLE_LIGHT, STYLE_DARK];
+  let satelliteOn = false;
+
+  function toggleSatellite() {
+    satelliteOn = !satelliteOn;
+    const btn = document.getElementById("satBtn");
+    if (satelliteOn) {
+      map.setMapTypeId(google.maps.MapTypeId.HYBRID);
+      map.setOptions({ styles: [] });
+      btn.textContent = "🗺 Road View";
+      btn.style.background = "#c9a84c";
+      btn.style.color = "#111";
+      btn.style.borderColor = "#c9a84c";
+    } else {
+      map.setMapTypeId(google.maps.MapTypeId.ROADMAP);
+      map.setOptions({ styles: STYLES[styleIdx] });
+      btn.textContent = "🛰 Satellite View";
+      btn.style.background = "";
+      btn.style.color = "";
+      btn.style.borderColor = "";
+    }
+  }
+
+  function toggleMapStyle() {
+    if (satelliteOn) return;
+    styleIdx = (styleIdx + 1) % STYLES.length;
+    if (map) map.setOptions({ styles: STYLES[styleIdx] });
+  }
+
+  // ── Init map ────────────────────────────────
+  function initMap() {
+    map = new google.maps.Map(document.getElementById("map"), {
+      center: { lat: 12.9716, lng: 77.5946 },
+      zoom: 12,
+      styles: STYLE_WARM,
+      mapTypeControl: true,
+      mapTypeControlOptions: {
+        style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
+        position: google.maps.ControlPosition.BOTTOM_CENTER,
+        mapTypeIds: [
+          google.maps.MapTypeId.ROADMAP,
+          google.maps.MapTypeId.SATELLITE,
+          google.maps.MapTypeId.HYBRID,
+          google.maps.MapTypeId.TERRAIN,
+        ],
+      },
+      streetViewControl: true,
+      fullscreenControl: true,
+      zoomControlOptions: { position: google.maps.ControlPosition.RIGHT_CENTER },
+    });
+
+    // Click on map → load spots there
+    map.addListener("click", (e) => {
+      const lat = e.latLng.lat();
+      const lng = e.latLng.lng();
+      // Reverse geocode for area name
+      const geocoder = new google.maps.Geocoder();
+      geocoder.geocode({ location: e.latLng }, (results, status) => {
+        let areaName = "Selected Area";
+        if (status === "OK" && results[0]) {
+          const comp = results[0].address_components.find(c =>
+            c.types.includes("sublocality") || c.types.includes("locality")
+          );
+          if (comp) areaName = comp.long_name;
+        }
+        currentAreaName = areaName;
+        document.getElementById("mapAreaLabel").textContent = areaName;
+        loadSpotsAt(lat, lng, areaName);
+      });
+    });
+
+    // Hide loader
+    setTimeout(() => {
+      document.getElementById("pageLoader").classList.add("hidden");
+    }, 800);
+
+    // Try auto-locate
+    locateMe();
+
+    // Setup search
+    initSearch();
+
+    // Load existing booking
+    checkMyBooking();
+  }
+
+  // ── Search ──────────────────────────────────
+  function initSearch() {
+    const inp  = document.getElementById("searchInput");
+    const drop = document.getElementById("searchDrop");
+    let debounceTimer;
+
+    inp.addEventListener("input", () => {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(async () => {
+        const q = inp.value.trim();
+        if (!q) { drop.classList.remove("open"); return; }
+        try {
+          const res = await fetch(`http://localhost:5000/api/search?q=${encodeURIComponent(q)}`);
+          const areas = await res.json();
+          if (!areas.length) { drop.classList.remove("open"); return; }
+          drop.innerHTML = areas.slice(0, 8).map(a => `
+            <div class="search-item" onclick="goToArea('${a.name}',${a.lat},${a.lng})">
+              <span>📍</span>
+              <div>
+                <div class="search-item-name">${a.name}</div>
+                <div class="search-item-coord">Bangalore · ${a.lat.toFixed(4)}, ${a.lng.toFixed(4)}</div>
+              </div>
+            </div>`).join("");
+          drop.classList.add("open");
+        } catch {}
+      }, 220);
+    });
+
+    inp.addEventListener("keydown", e => {
+      if (e.key === "Escape") { drop.classList.remove("open"); inp.blur(); }
+    });
+    document.addEventListener("click", e => {
+      if (!inp.contains(e.target) && !drop.contains(e.target))
+        drop.classList.remove("open");
+    });
+  }
+
+  function goToArea(name, lat, lng) {
+    document.getElementById("searchInput").value = name;
+    document.getElementById("searchDrop").classList.remove("open");
+    currentAreaName = name;
+    document.getElementById("mapAreaLabel").textContent = name;
+    map.panTo({ lat, lng });
+    map.setZoom(15);
+    loadSpotsAt(lat, lng, name);
+  }
+
+  // ── Locate ──────────────────────────────────
+  function locateMe() {
+    const btn = document.getElementById("gpsBtn");
+    btn.disabled = true;
+    btn.textContent = "⏳ Locating…";
+    document.getElementById("locLabel").textContent = "Getting location…";
+
+    if (!navigator.geolocation) {
+      fallbackBangalore("Geolocation not supported");
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(pos => {
+      userLat = pos.coords.latitude;
+      userLng = pos.coords.longitude;
+      document.getElementById("locLabel").textContent =
+        `${userLat.toFixed(4)}, ${userLng.toFixed(4)}`;
+      btn.textContent = "⟳ Re-Locate";
+      btn.disabled = false;
+      placeUserMarker(userLat, userLng);
+      map.panTo({ lat: userLat, lng: userLng });
+      map.setZoom(16);
+      currentAreaName = "Your Location";
+      document.getElementById("mapAreaLabel").textContent = currentAreaName;
+      loadSpotsAt(userLat, userLng, currentAreaName);
+    }, () => fallbackBangalore("GPS permission denied"),
+    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
+  }
+
+  function fallbackBangalore(reason) {
+    userLat = 12.9716; userLng = 77.5946;
+    document.getElementById("locLabel").textContent = "Bangalore (default)";
+    const btn = document.getElementById("gpsBtn");
+    btn.textContent = "📍 Use My Location";
+    btn.disabled = false;
+    toast(reason + " — showing Bangalore centre", "err");
+    placeUserMarker(userLat, userLng);
+    loadSpotsAt(userLat, userLng, "Bangalore");
+  }
+
+  function placeUserMarker(lat, lng) {
+    if (userMarker) userMarker.setMap(null);
+    userMarker = new google.maps.Marker({
+      position: { lat, lng },
+      map,
+      title: "You are here",
+      zIndex: 999,
+      icon: {
+        path: google.maps.SymbolPath.CIRCLE,
+        scale: 10,
+        fillColor: "#4285f4",
+        fillOpacity: 1,
+        strokeWeight: 3,
+        strokeColor: "#fff",
+      },
+    });
+
+    // Accuracy circle
+    new google.maps.Circle({
+      map,
+      center: { lat, lng },
+      radius: 80,
+      fillColor: "#4285f4",
+      fillOpacity: 0.08,
+      strokeColor: "#4285f4",
+      strokeOpacity: 0.3,
+      strokeWeight: 1,
+    });
+  }
+
+  // ── Load spots ──────────────────────────────
+  async function loadSpots() {
+    if (userLat && userLng) loadSpotsAt(userLat, userLng, currentAreaName);
+  }
+
+  async function loadSpotsAt(lat, lng, areaName) {
+    try {
+      const res = await fetch(
+        `http://localhost:5000/api/parking?lat=${lat}&lng=${lng}&area=${encodeURIComponent(areaName || "")}`
+      );
+      const spots = await res.json();
+      renderSidebar(spots, areaName);
+      renderMarkers(spots);
+      updateStats(spots, areaName);
+    } catch {
+      toast("Backend offline — run: node server.js", "err");
+    }
+  }
+
+  // ── My booking ──────────────────────────────
+  async function checkMyBooking() {
+    try {
+      const res  = await fetch(`http://localhost:5000/api/mybooking/${username}`);
+      const data = await res.json();
+      currentBooking = data.booking || null;
+      renderBookingCard();
+    } catch {}
+  }
+
+  // ── Sidebar render ──────────────────────────
+  function renderSidebar(spots, areaName) {
+    const list = document.getElementById("spotsList");
+    list.innerHTML = "";
+
+    if (!spots.length) {
+      list.innerHTML = '<div class="empty-state"><span class="empty-state-icon">🅿</span>No spots found here</div>';
+      return;
+    }
+
+    // Sort: empty first
+    spots.sort((a,b) => {
+      const order = { empty:0, reserved:1, full:2 };
+      return (order[a.status]||0) - (order[b.status]||0);
+    });
+
+    spots.forEach(spot => {
+      const isMine = currentBooking && currentBooking.spotId === spot.id;
+      const badge  = { empty:"badge-e", full:"badge-f", reserved:"badge-r" }[spot.status];
+      const label  = { empty:"Available", full:"Full", reserved:"Reserved" }[spot.status];
+
+      // Distance from user
+      let distHtml = "";
+      if (userLat && userLng) {
+        const d = haversine(userLat, userLng, spot.lat, spot.lng);
+        distHtml = `<span class="sc-dist">${d < 1 ? Math.round(d*1000)+"m" : d.toFixed(1)+"km"}</span>`;
+      }
+
+      const div = document.createElement("div");
+      div.className = `spot-card ${spot.status}${isMine ? " mine" : ""}`;
+      div.innerHTML = `
+        <div class="sc-top">
+          <div class="sc-name">${isMine ? "⭐ " : ""}${spot.name}</div>
+          <span class="sc-badge ${badge}">${label}</span>
+        </div>
+        <div class="sc-meta">
+          <span class="sc-rate">₹<strong>${spot.rate}</strong>/hr</span>
+          ${distHtml}
+        </div>
+        ${spot.status === "empty" && !currentBooking
+          ? `<button class="sc-book-btn" onclick="event.stopPropagation();bookSpot(${spot.id},${spot.lat},${spot.lng},'${escHtml(spot.area||areaName)}')">Book This Slot</button>`
+          : ""}
+        ${isMine
+          ? `<button class="sc-book-btn" style="background:var(--gold);color:#111" onclick="event.stopPropagation();showQR()">📱 My QR Pass</button>`
+          : ""}
+      `;
+      div.addEventListener("click", () => {
+        map.panTo({ lat: spot.lat, lng: spot.lng });
+        map.setZoom(17);
+      });
+      list.appendChild(div);
+    });
+  }
+
+  // ── Map markers ─────────────────────────────
+  function renderMarkers(spots) {
+    markers.forEach(m => m.setMap(null));
+    markers = [];
+
+    spots.forEach(spot => {
+      const isMine = currentBooking && currentBooking.spotId === spot.id;
+      const colors = { empty: "#2e7d32", full: "#c0392b", reserved: "#e65100" };
+      const color  = colors[spot.status] || "#888";
+
+      const marker = new google.maps.Marker({
+        position: { lat: spot.lat, lng: spot.lng },
+        map,
+        title: spot.name,
+        zIndex: isMine ? 100 : 1,
+        icon: {
+          path: google.maps.SymbolPath.CIRCLE,
+          scale: isMine ? 14 : 11,
+          fillColor: color,
+          fillOpacity: 0.95,
+          strokeWeight: isMine ? 3 : 2,
+          strokeColor: isMine ? "#c9a84c" : "#fff",
+        },
+      });
+
+      const canBook = spot.status === "empty" && !currentBooking;
+      const infoHtml = `
+        <div style="font-family:'DM Sans',sans-serif;padding:6px 2px;min-width:180px">
+          <div style="font-weight:600;font-size:13px;margin-bottom:4px;color:#2c2c2c">${spot.name}</div>
+          <div style="font-size:11px;color:${color};text-transform:uppercase;font-weight:500;margin-bottom:6px">${spot.status}</div>
+          <div style="font-size:12px;color:#666;margin-bottom:${canBook ? "10px" : "0"}">₹${spot.rate}/hr · ${spot.area || ""}</div>
+          ${canBook
+            ? `<button onclick="bookSpot(${spot.id},${spot.lat},${spot.lng},'${escHtml(spot.area||"")}');this.closest('.gm-style-iw').querySelector('button').click();"
+                style="width:100%;padding:8px;background:#1a2e1a;color:#fff;border:none;border-radius:7px;font-weight:500;cursor:pointer;font-size:12px;font-family:'DM Sans',sans-serif">
+                Book This Slot
+              </button>`
+            : ""}
+          ${isMine
+            ? `<button onclick="showQR();this.closest('.gm-style-iw').querySelector('button').click();"
+                style="width:100%;padding:8px;background:#c9a84c;color:#111;border:none;border-radius:7px;font-weight:500;cursor:pointer;font-size:12px;font-family:'DM Sans',sans-serif">
+                📱 My QR Pass
+              </button>`
+            : ""}
+        </div>`;
+
+      const info = new google.maps.InfoWindow({ content: infoHtml });
+      marker.addListener("click", () => info.open(map, marker));
+      markers.push(marker);
+    });
+  }
+
+  // ── Booking card ────────────────────────────
+  function renderBookingCard() {
+    const card = document.getElementById("bookingCard");
+    if (!currentBooking) { card.classList.remove("visible"); return; }
+    card.classList.add("visible");
+    document.getElementById("bcId").textContent   = currentBooking.bookingId || "—";
+    document.getElementById("bcSpot").textContent = currentBooking.spotName  || "—";
+    document.getElementById("bcRate").textContent = currentBooking.rate ? `₹${currentBooking.rate}/hr` : "—";
+    document.getElementById("bcArea").textContent = currentBooking.area || "—";
+
+    // Elapsed time
+    if (currentBooking.bookedAt) {
+      const mins = Math.floor((Date.now() - new Date(currentBooking.bookedAt)) / 60000);
+      document.getElementById("bcTime").textContent = mins < 60
+        ? `${mins}m ago`
+        : `${Math.floor(mins/60)}h ${mins%60}m`;
+    }
+  }
+
+  // ── Stats ────────────────────────────────────
+  function updateStats(spots, areaName) {
+    const avail = spots.filter(s => s.status === "empty").length;
+    document.getElementById("stAvail").textContent = avail;
+    document.getElementById("stTotal").textContent = spots.length;
+    document.getElementById("stArea").textContent  = areaName || "";
+    document.getElementById("sbStats").classList.add("show");
+  }
+
+  // ── Book ─────────────────────────────────────
+  async function bookSpot(spotId, lat, lng, area) {
+    if (!userLat && !lat) return toast("Get location first", "err");
+    const bLat = lat || userLat;
+    const bLng = lng || userLng;
+    try {
+      const res = await fetch("http://localhost:5000/api/book", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lat: bLat, lng: bLng, spotId, username, area }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        currentBooking = {
+          bookingId: data.bookingId,
+          spotId,
+          spotName: data.spotName,
+          area:     data.area || area,
+          rate:     data.rate,
+          bookedAt: data.bookedAt,
+          lat: bLat, lng: bLng,
+        };
+        toast(`Booked! ${data.bookingId}`, "ok");
+        renderBookingCard();
+        await loadSpotsAt(bLat, bLng, area);
+        setTimeout(showQR, 400);
+      } else {
+        toast(data.error, "err");
+      }
+    } catch { toast("Backend error", "err"); }
+  }
+
+  // ── Cancel ────────────────────────────────────
+  async function cancelBooking() {
+    if (!currentBooking) return;
+    if (!confirm(`Cancel booking ${currentBooking.bookingId}?`)) return;
+    try {
+      const res = await fetch("http://localhost:5000/api/cancel", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bookingId: currentBooking.bookingId, username }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        toast("Booking cancelled", "ok");
+        const lat = currentBooking.lat, lng = currentBooking.lng, area = currentBooking.area;
+        currentBooking = null;
+        renderBookingCard();
+        await loadSpotsAt(lat, lng, area);
+      } else {
+        toast(data.error, "err");
+      }
+    } catch { toast("Backend error", "err"); }
+  }
+
+  // ── Nearest ───────────────────────────────────
+  async function showNearestParking() {
+    if (!userLat) return toast("Get location first", "err");
+    try {
+      const res    = await fetch(`http://localhost:5000/api/parking?lat=${userLat}&lng=${userLng}`);
+      const spots  = await res.json();
+      const empty  = spots.filter(s => s.status === "empty");
+      if (!empty.length) return toast("No available spots nearby", "err");
+      const nearest = empty.reduce((best, s) => {
+        const d = haversine(userLat, userLng, s.lat, s.lng);
+        return (!best || d < haversine(userLat, userLng, best.lat, best.lng)) ? s : best;
+      }, null);
+      map.panTo({ lat: nearest.lat, lng: nearest.lng });
+      map.setZoom(17);
+      const d = haversine(userLat, userLng, nearest.lat, nearest.lng);
+      toast(`Nearest: ${nearest.name} — ${d < 1 ? Math.round(d*1000)+"m" : d.toFixed(1)+"km"} away`, "info");
+    } catch { toast("Error finding nearest", "err"); }
+  }
+
+  // ── Fit all markers ───────────────────────────
+  function fitAllMarkers() {
+    if (!markers.length) return;
+    const bounds = new google.maps.LatLngBounds();
+    markers.forEach(m => bounds.extend(m.getPosition()));
+    if (userMarker) bounds.extend(userMarker.getPosition());
+    map.fitBounds(bounds, { top:60, right:60, bottom:60, left:60 });
+  }
+
+  // ── QR ───────────────────────────────────────
+  function showQR() {
+    if (!currentBooking) return toast("No active booking", "err");
+
+    const overlay = document.getElementById("qrOverlay");
+    const box     = document.getElementById("qrcode-box");
+
+    document.getElementById("qrSub").textContent =
+      `${currentBooking.bookingId} · ${currentBooking.spotName}`;
+
+    // Info grid
+    const bookedDate = currentBooking.bookedAt
+      ? new Date(currentBooking.bookedAt).toLocaleString("en-IN", { timeZone: "Asia/Kolkata", hour12: true, hour:"2-digit", minute:"2-digit", day:"numeric", month:"short" })
+      : "—";
+    document.getElementById("qrInfoGrid").innerHTML = `
+      <div class="qr-info-item"><div class="qr-info-label">Booking ID</div><div class="qr-info-val">${currentBooking.bookingId}</div></div>
+      <div class="qr-info-item"><div class="qr-info-label">Rate</div><div class="qr-info-val">₹${currentBooking.rate || "—"}/hr</div></div>
+      <div class="qr-info-item"><div class="qr-info-label">Area</div><div class="qr-info-val">${currentBooking.area || "—"}</div></div>
+      <div class="qr-info-item"><div class="qr-info-label">Booked</div><div class="qr-info-val">${bookedDate}</div></div>
+    `;
+
+    overlay.classList.add("open");
+    box.innerHTML = "";
+
+    const qrText = JSON.stringify({
+      id:    currentBooking.bookingId,
+      user:  username,
+      spot:  currentBooking.spotName,
+      area:  currentBooking.area,
+      rate:  currentBooking.rate,
+      booked: currentBooking.bookedAt,
+    });
+
+    loadQR(() => {
+      box.innerHTML = "";
+      if (!window.QRCode) {
+        box.innerHTML = `<div style="font-family:'DM Sans',sans-serif;text-align:center;padding:20px">
+          <div style="font-size:11px;color:#888;margin-bottom:8px;text-transform:uppercase;letter-spacing:1px">Booking ID</div>
+          <div style="font-size:22px;font-weight:700;color:#1a2e1a;letter-spacing:2px">${currentBooking.bookingId}</div>
+        </div>`;
+        return;
+      }
+      try {
+        new QRCode(box, {
+          text: qrText, width: 200, height: 200,
+          colorDark: "#1a2e1a", colorLight: "#ffffff",
+          correctLevel: QRCode.CorrectLevel.H,
+        });
+      } catch(e) {
+        box.innerHTML = `<div style="padding:20px;text-align:center;font-size:14px;font-weight:600;color:#1a2e1a">${currentBooking.bookingId}</div>`;
+      }
+    });
+  }
+
+  function closeQR() {
+    document.getElementById("qrOverlay").classList.remove("open");
+  }
+  document.getElementById("qrOverlay").addEventListener("click", function(e) {
+    if (e.target === this) closeQR();
+  });
+
+  // ── Util ─────────────────────────────────────
+  function haversine(lat1, lng1, lat2, lng2) {
+    const R = 6371, dLat = (lat2-lat1)*Math.PI/180, dLng = (lng2-lng1)*Math.PI/180;
+    const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  }
+  function escHtml(s) { return String(s).replace(/'/g, "\\'"); }
+
+  // ── Booking timer ─────────────────────────────
+  setInterval(() => { if (currentBooking) renderBookingCard(); }, 60000);
+</script>
+
+<script
+  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAuoyeV4MXni-X9bw3Jz1nrtvAqpc8lugQ&callback=initMap&libraries=places"
+  async defer
+></script>
+</body>
+</html>

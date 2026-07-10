@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#1a2e1a">
+  <title>ParkWise · Sign In</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    /* ── CSS Variables ─────────────────────────── */
+    :root {
+      --ivory:   #f7f3ee;
+      --ivory2:  #ede8e0;
+      --forest:  #1a2e1a;
+      --forest2: #243824;
+      --forest3: #2f4a2f;
+      --gold:    #c9a84c;
+      --gold2:   #e8c97a;
+      --text:    #2c2c2c;
+      --muted:   #8a8070;
+      --border:  rgba(44,44,44,0.12);
+      --shadow:  0 24px 64px rgba(26,46,26,0.14);
+      --r:       14px;
+    }
+    [data-theme="dark"] {
+      --ivory:   #111a11;
+      --ivory2:  #182018;
+      --forest:  #e8e0d4;
+      --forest2: #d4cab8;
+      --forest3: #b8aa94;
+      --gold:    #c9a84c;
+      --gold2:   #e8c97a;
+      --text:    #e8e0d4;
+      --muted:   #7a7060;
+      --border:  rgba(232,224,212,0.1);
+      --shadow:  0 24px 64px rgba(0,0,0,0.5);
+    }
+
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+    html { font-size: 16px; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--ivory2);
+      color: var(--text);
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      transition: background 0.4s, color 0.4s;
+      overflow: hidden;
+    }
+
+    /* ── LEFT PANEL ─────────────────────────────── */
+    .left-panel {
+      background: var(--forest);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 48px;
+      position: relative;
+      overflow: hidden;
+    }
+    .left-panel::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 60% 50% at 30% 20%, rgba(201,168,76,0.12) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 60% at 70% 80%, rgba(201,168,76,0.08) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    /* Subtle texture lines */
+    .left-panel::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: repeating-linear-gradient(
+        -45deg,
+        transparent,
+        transparent 40px,
+        rgba(201,168,76,0.03) 40px,
+        rgba(201,168,76,0.03) 41px
+      );
+      pointer-events: none;
+    }
+
+    .brand {
+      position: relative;
+      z-index: 1;
+    }
+    .brand-mark {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 48px;
+    }
+    .brand-icon {
+      width: 44px; height: 44px;
+      background: var(--gold);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+    .brand-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 26px;
+      font-weight: 600;
+      color: var(--ivory);
+      letter-spacing: 0.5px;
+    }
+    .brand-name span { color: var(--gold); }
+
+    .hero-text {
+      position: relative;
+      z-index: 1;
+    }
+    .hero-text h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(36px, 4vw, 56px);
+      font-weight: 400;
+      color: var(--ivory);
+      line-height: 1.15;
+      margin-bottom: 20px;
+    }
+    .hero-text h1 em {
+      font-style: italic;
+      color: var(--gold);
+    }
+    .hero-text p {
+      font-size: 15px;
+      color: rgba(247,243,238,0.55);
+      line-height: 1.7;
+      max-width: 320px;
+    }
+
+    /* Stat chips */
+    .stats-row {
+      display: flex;
+      gap: 16px;
+      position: relative;
+      z-index: 1;
+    }
+    .stat-chip {
+      background: rgba(247,243,238,0.06);
+      border: 1px solid rgba(247,243,238,0.1);
+      border-radius: 10px;
+      padding: 14px 18px;
+      flex: 1;
+    }
+    .stat-chip-val {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 28px;
+      font-weight: 600;
+      color: var(--gold);
+      line-height: 1;
+    }
+    .stat-chip-label {
+      font-size: 11px;
+      color: rgba(247,243,238,0.4);
+      margin-top: 4px;
+      letter-spacing: 0.5px;
+    }
+
+    /* Floating parking icon */
+    .floating-p {
+      position: absolute;
+      right: -20px; top: 50%;
+      transform: translateY(-50%);
+      font-size: 280px;
+      color: rgba(201,168,76,0.04);
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 600;
+      line-height: 1;
+      user-select: none;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── RIGHT PANEL ─────────────────────────────── */
+    .right-panel {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 48px;
+      position: relative;
+      background: var(--ivory);
+      transition: background 0.4s;
+    }
+
+    .theme-toggle {
+      position: absolute;
+      top: 24px; right: 24px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 12px;
+      cursor: pointer;
+      font-size: 16px;
+      color: var(--muted);
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+    }
+    .theme-toggle:hover { border-color: var(--gold); color: var(--gold); }
+
+    .form-wrap {
+      width: 100%;
+      max-width: 380px;
+    }
+
+    .form-header { margin-bottom: 32px; }
+    .form-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 36px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+    .form-subtitle { font-size: 14px; color: var(--muted); }
+
+    /* Tab switcher */
+    .tab-row {
+      display: flex;
+      gap: 0;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 28px;
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 11px;
+      border: none;
+      background: transparent;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.25s;
+      letter-spacing: 0.3px;
+    }
+    .tab-btn.active {
+      background: var(--forest);
+      color: var(--ivory);
+    }
+    [data-theme="dark"] .tab-btn.active {
+      background: var(--gold);
+      color: #111;
+    }
+
+    /* Form panels */
+    .panel { display: none; }
+    .panel.active { display: block; animation: slideUp 0.35s ease; }
+    @keyframes slideUp {
+      from { opacity:0; transform:translateY(10px); }
+      to   { opacity:1; transform:none; }
+    }
+
+    /* Fields */
+    .field { margin-bottom: 18px; }
+    .field label {
+      display: block;
+      font-size: 11px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    .field-wrap { position: relative; }
+    .field-wrap .fi {
+      position: absolute;
+      left: 14px; top: 50%;
+      transform: translateY(-50%);
+      font-size: 16px;
+      pointer-events: none;
+    }
+    .field input {
+      width: 100%;
+      padding: 13px 14px 13px 40px;
+      background: var(--ivory2);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      color: var(--text);
+      outline: none;
+      transition: all 0.25s;
+    }
+    [data-theme="dark"] .field input {
+      background: rgba(255,255,255,0.04);
+      border-color: rgba(255,255,255,0.1);
+    }
+    .field input:focus {
+      border-color: var(--forest);
+      box-shadow: 0 0 0 3px rgba(26,46,26,0.08);
+    }
+    [data-theme="dark"] .field input:focus {
+      border-color: var(--gold);
+      box-shadow: 0 0 0 3px rgba(201,168,76,0.12);
+    }
+    .field input::placeholder { color: var(--muted); opacity: 0.6; }
+
+    /* Submit */
+    .submit-btn {
+      width: 100%;
+      padding: 14px;
+      margin-top: 4px;
+      background: var(--forest);
+      color: var(--ivory);
+      border: none;
+      border-radius: 10px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      transition: all 0.25s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      position: relative;
+      overflow: hidden;
+    }
+    [data-theme="dark"] .submit-btn {
+      background: var(--gold);
+      color: #111;
+    }
+    .submit-btn::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(255,255,255,0);
+      transition: background 0.2s;
+    }
+    .submit-btn:hover::after { background: rgba(255,255,255,0.08); }
+    .submit-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(26,46,26,0.25); }
+    .submit-btn:active { transform: none; box-shadow: none; }
+    .submit-btn.loading { opacity: 0.7; pointer-events: none; }
+
+    /* Spinner */
+    .spinner {
+      width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      display: none;
+      animation: spin 0.7s linear infinite;
+    }
+    [data-theme="dark"] .spinner { border-color: rgba(0,0,0,0.2); border-top-color: #111; }
+    .submit-btn.loading .spinner { display: block; }
+    .submit-btn.loading .btn-txt { display: none; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Message */
+    .msg-box {
+      margin-top: 14px;
+      padding: 11px 14px;
+      border-radius: 9px;
+      font-size: 13px;
+      display: none;
+      align-items: center;
+      gap: 8px;
+    }
+    .msg-box.show { display: flex; animation: slideUp 0.3s ease; }
+    .msg-box.ok  { background: rgba(26,46,26,0.08); border: 1px solid rgba(26,46,26,0.15); color: var(--forest); }
+    .msg-box.err { background: rgba(200,50,50,0.06); border: 1px solid rgba(200,50,50,0.2);  color: #b03030; }
+    [data-theme="dark"] .msg-box.ok  { background: rgba(201,168,76,0.1); border-color: rgba(201,168,76,0.25); color: var(--gold2); }
+    [data-theme="dark"] .msg-box.err { background: rgba(255,80,80,0.08); border-color: rgba(255,80,80,0.2); color: #ff8080; }
+
+    /* Divider */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 20px 0;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .divider::before, .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* Footer text */
+    .form-footer {
+      margin-top: 20px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    /* ── Mobile ─────────────────────────────────── */
+    @media (max-width: 768px) {
+      body { grid-template-columns: 1fr; overflow: auto; }
+      .left-panel {
+        padding: 36px 28px 28px;
+        min-height: auto;
+      }
+      .hero-text h1 { font-size: 32px; }
+      .floating-p { display: none; }
+      .stats-row { gap: 10px; }
+      .right-panel { padding: 32px 24px; justify-content: flex-start; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- LEFT: Brand panel -->
+<div class="left-panel">
+  <div class="brand">
+    <div class="brand-mark">
+      <div class="brand-icon">🅿</div>
+      <div class="brand-name">Park<span>Wise</span></div>
+    </div>
+  </div>
+
+  <div class="hero-text">
+    <h1>Smart parking<br>for <em>Bangalore</em></h1>
+    <p>Find, book, and navigate to parking spots across the city — instantly. Built for professionals, designed for everyone.</p>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-chip">
+      <div class="stat-chip-val">30+</div>
+      <div class="stat-chip-label">Areas covered</div>
+    </div>
+    <div class="stat-chip">
+      <div class="stat-chip-val">10×</div>
+      <div class="stat-chip-label">Spots per area</div>
+    </div>
+    <div class="stat-chip">
+      <div class="stat-chip-val">QR</div>
+      <div class="stat-chip-label">Entry pass</div>
+    </div>
+  </div>
+
+  <div class="floating-p">P</div>
+</div>
+
+<!-- RIGHT: Auth panel -->
+<div class="right-panel">
+  <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">☀ Light</button>
+
+  <div class="form-wrap">
+    <div class="form-header">
+      <div class="form-title" id="formTitle">Welcome back</div>
+      <div class="form-subtitle" id="formSub">Sign in to your ParkWise account</div>
+    </div>
+
+    <div class="tab-row">
+      <button class="tab-btn active" onclick="switchTab('login')" id="tabLogin">Sign In</button>
+      <button class="tab-btn" onclick="switchTab('register')" id="tabReg">Create Account</button>
+    </div>
+
+    <!-- LOGIN -->
+    <div class="panel active" id="panelLogin">
+      <div class="field">
+        <label>Username</label>
+        <div class="field-wrap">
+          <span class="fi">👤</span>
+          <input type="text" id="lu" placeholder="Your username" autocomplete="username">
+        </div>
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <div class="field-wrap">
+          <span class="fi">🔒</span>
+          <input type="password" id="lp" placeholder="••••••••" autocomplete="current-password">
+        </div>
+      </div>
+      <button class="submit-btn" onclick="doLogin()" id="loginBtn">
+        <span class="btn-txt">Sign In →</span>
+        <div class="spinner"></div>
+      </button>
+      <div class="msg-box" id="lmsg"></div>
+    </div>
+
+    <!-- REGISTER -->
+    <div class="panel" id="panelReg">
+      <div class="field">
+        <label>Username</label>
+        <div class="field-wrap">
+          <span class="fi">👤</span>
+          <input type="text" id="ru" placeholder="Choose a username" autocomplete="username">
+        </div>
+      </div>
+      <div class="field">
+        <label>Email <span style="font-weight:300;opacity:0.5">(optional)</span></label>
+        <div class="field-wrap">
+          <span class="fi">✉</span>
+          <input type="email" id="re" placeholder="you@email.com" autocomplete="email">
+        </div>
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <div class="field-wrap">
+          <span class="fi">🔒</span>
+          <input type="password" id="rp" placeholder="Min 6 characters" autocomplete="new-password">
+        </div>
+      </div>
+      <button class="submit-btn" onclick="doRegister()" id="regBtn">
+        <span class="btn-txt">Create Account →</span>
+        <div class="spinner"></div>
+      </button>
+      <div class="msg-box" id="rmsg"></div>
+    </div>
+
+    <div class="form-footer">
+      By continuing you agree to our <u style="cursor:pointer">Terms</u> &amp; <u style="cursor:pointer">Privacy Policy</u>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ── Theme ──────────────────────────────────────
+  const saved = localStorage.getItem("pw-theme") || "light";
+  applyTheme(saved);
+
+  function applyTheme(t) {
+    document.documentElement.setAttribute("data-theme", t);
+    document.getElementById("themeBtn").textContent = t === "dark" ? "☀ Light" : "☾ Dark";
+    localStorage.setItem("pw-theme", t);
+  }
+  function toggleTheme() {
+    const cur = document.documentElement.getAttribute("data-theme") || "light";
+    applyTheme(cur === "dark" ? "light" : "dark");
+  }
+
+  // ── Tab switch ─────────────────────────────────
+  function switchTab(tab) {
+    const isLogin = tab === "login";
+    document.getElementById("tabLogin").classList.toggle("active", isLogin);
+    document.getElementById("tabReg").classList.toggle("active", !isLogin);
+    document.getElementById("panelLogin").classList.toggle("active", isLogin);
+    document.getElementById("panelReg").classList.toggle("active", !isLogin);
+    document.getElementById("formTitle").textContent = isLogin ? "Welcome back" : "Create account";
+    document.getElementById("formSub").textContent   = isLogin
+      ? "Sign in to your ParkWise account"
+      : "Join ParkWise — it's free";
+  }
+
+  // ── Message helper ─────────────────────────────
+  function msg(id, text, ok) {
+    const el = document.getElementById(id);
+    el.innerHTML = `<span>${ok ? "✓" : "✕"}</span> ${text}`;
+    el.className = `msg-box show ${ok ? "ok" : "err"}`;
+  }
+
+  function setLoading(btnId, on) {
+    document.getElementById(btnId).classList.toggle("loading", on);
+  }
+
+  // ── Login ──────────────────────────────────────
+  async function doLogin() {
+    const u = document.getElementById("lu").value.trim();
+    const p = document.getElementById("lp").value.trim();
+    if (!u || !p) return msg("lmsg", "Please fill in all fields", false);
+    setLoading("loginBtn", true);
+    try {
+      const res  = await fetch("http://localhost:5000/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: u, password: p }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        msg("lmsg", "Access granted — loading dashboard…", true);
+        localStorage.setItem("pw-loggedIn", "true");
+        localStorage.setItem("pw-username", u);
+        setTimeout(() => window.location = "dashboard.html", 900);
+      } else {
+        msg("lmsg", data.error, false);
+      }
+    } catch {
+      msg("lmsg", "Cannot reach server — is backend running?", false);
+    } finally {
+      setLoading("loginBtn", false);
+    }
+  }
+
+  // ── Register ───────────────────────────────────
+  async function doRegister() {
+    const u = document.getElementById("ru").value.trim();
+    const e = document.getElementById("re").value.trim();
+    const p = document.getElementById("rp").value.trim();
+    if (!u || !p) return msg("rmsg", "Username and password required", false);
+    if (p.length < 6) return msg("rmsg", "Password must be at least 6 characters", false);
+    setLoading("regBtn", true);
+    try {
+      const res  = await fetch("http://localhost:5000/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: u, email: e, password: p }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        msg("rmsg", "Account created — switching to sign in…", true);
+        setTimeout(() => switchTab("login"), 1400);
+      } else {
+        msg("rmsg", data.error, false);
+      }
+    } catch {
+      msg("rmsg", "Cannot reach server — is backend running?", false);
+    } finally {
+      setLoading("regBtn", false);
+    }
+  }
+
+  // ── Enter key ──────────────────────────────────
+  document.addEventListener("keydown", e => {
+    if (e.key !== "Enter") return;
+    if (document.getElementById("panelLogin").classList.contains("active")) doLogin();
+    else doRegister();
+  });
+
+  // Redirect if already logged in
+  if (localStorage.getItem("pw-loggedIn")) window.location = "dashboard.html";
+</script>
+</body>
+</html>

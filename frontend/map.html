@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Parking Map | Parking Locator</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>🚗 Parking Map</header>
+<div class="container">
+    <h3>Parking Spots in Bangalore</h3>
+    <button id="searchBtn">Show Parking Spots</button>
+    <div id="map"></div>
+</div>
+
+<script>
+let map;
+
+function initMap() {
+    map = new google.maps.Map(document.getElementById("map"), {
+        center: { lat: 13.0286, lng: 77.5871 },
+        zoom: 15
+    });
+}
+
+document.getElementById("searchBtn").addEventListener("click", async () => {
+    const res = await fetch("http://localhost:5000/parking/Bangalore");
+    const spots = await res.json();
+
+    spots.forEach(spot => {
+        let color = spot.status === "empty" ? "green" : spot.status === "full" ? "red" : "orange";
+        new google.maps.Marker({
+            position: { lat: spot.lat, lng: spot.lng },
+            map: map,
+            title: `${spot.name} - ${spot.status}`,
+            icon: { path: google.maps.SymbolPath.CIRCLE, scale: 10, fillColor: color, fillOpacity: 0.8, strokeWeight: 1, strokeColor: "#000" }
+        });
+    });
+});
+</script>
+
+<!-- Replace YOUR_API_KEY with your Google Maps API Key -->
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAuoyeV4MXni-X9bw3Jz1nrtvAqpc8lugQ&callback=initMap" async defer></script>
+</body>
+</html>
