@@ -103,38 +103,40 @@ A **Smart Parking Locator** application tailored for Bangalore:
 
 ## 🌟 Features of the System
 
-- **Live Availability Status:** Green (Empty), Red (Occupied).
-- **Location-Based Search:** Find parking near specific tech parks or malls.
-- **User Dashboard:** Track past bookings, payments, and saved vehicles.
-- **Automated Alerts:** Notifications when parking time is about to expire.
-- **Dynamic Pricing:** Rates based on demand and peak hours.
+- **Live Availability Status:** Green (Empty), Red (Occupied), Orange (Reserved), EV Bay.
+- **Location-Based Search:** 30+ Bangalore tech parks, commercial complexes & transit hubs.
+- **Dynamic Pricing Engine:** Multi-factor calculation (Vehicle category, duration, peak rush hour surge, 18% GST).
+- **Dual Verification Pass:** Scannable tamper-evident QR Code + 6-digit Quick Gate Entry PIN.
+- **IoT Gate Barrier Simulator:** Automated spot barrier validation, vehicle check-in, and check-out with overstay tracking.
+- **User Dashboard & Real-Time Navigation:** Active pass tracking, route navigation, and instant cancellation.
 
 ---
 
 ## 🛠️ Technologies Used
 
 **Frontend:**
-<span class="tech-box">HTML5</span> <span class="tech-box">CSS3</span> <span class="tech-box">JavaScript (React / Vanilla)</span>
+<span class="tech-box">HTML5</span> <span class="tech-box">CSS3 (Design Tokens)</span> <span class="tech-box">JavaScript (ES6+)</span>
 
-**Backend:**
-<span class="tech-box">Node.js</span> <span class="tech-box">Express.js</span>
+**Backend & Security:**
+<span class="tech-box">Node.js</span> <span class="tech-box">Express.js</span> <span class="tech-box">JWT Auth</span> <span class="tech-box">Bcrypt</span> <span class="tech-box">Helmet</span>
 
-**Database:**
-<span class="tech-box">MongoDB / PostgreSQL</span>
+**Database & Persistence:**
+<span class="tech-box">MongoDB</span> <span class="tech-box">Resilient In-Memory Datastore</span>
 
 **APIs & Integrations:**
-<span class="tech-box">Google Maps API (Navigation)</span> <span class="tech-box">Payment Gateway (Razorpay/Stripe)</span>
+<span class="tech-box">Google Maps JavaScript & Places API</span> <span class="tech-box">IoT Gate Barrier API</span>
 
 ---
 
 ## ⚙️ Working Overview
 
-1. **User Registration/Login:** Driver opens the app and creates an account.
-2. **Search Destination:** Driver enters the target location in Bangalore.
-3. **View Map:** The system displays nearby parking lots with current empty slots.
-4. **Book & Pay:** Driver selects a spot, chooses duration, and pays online.
-5. **Navigate:** The app provides step-by-step navigation to the reserved spot.
-6. **Exit:** Driver leaves, and the slot is immediately marked "Available" for others.
+1. **User Registration / Login:** Driver authenticates securely using JWT-backed session credentials.
+2. **Search Destination:** Driver enters target location or selects from 30+ curated Bangalore hubs.
+3. **View Map & Select Bay:** Interactive Google Maps displays live vacant slots, rates, and distances.
+4. **Book with Dynamic Pricing:** System computes tiered price based on vehicle type and peak demand.
+5. **Receive Verification Pass:** Driver receives a 6-digit Gate PIN and signed QR Pass.
+6. **Spot Entry & Barrier Clearance:** Driver presents PIN/QR at the parking spot terminal (`/gate`); barrier raises.
+7. **Exit & Settlement:** System tracks parking duration, computes final settlement, and frees slot.
 
 ---
 
