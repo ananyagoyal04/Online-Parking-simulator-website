@@ -563,6 +563,9 @@
     document.getElementById(btnId).classList.toggle("loading", on);
   }
 
+  // ── Dynamic API Base (Local / Vercel compatible) ──
+  const API_BASE = (window.location.protocol === "file:" || (window.location.hostname === "localhost" && window.location.port !== "5000" && window.location.port !== "")) ? "http://localhost:5000" : "";
+
   // ── Login ──────────────────────────────────────
   async function doLogin() {
     const u = document.getElementById("lu").value.trim();
@@ -570,7 +573,7 @@
     if (!u || !p) return msg("lmsg", "Please fill in all fields", false);
     setLoading("loginBtn", true);
     try {
-      const res  = await fetch("http://localhost:5000/api/login", {
+      const res  = await fetch(`${API_BASE}/api/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username: u, password: p }),
@@ -600,7 +603,7 @@
     if (p.length < 6) return msg("rmsg", "Password must be at least 6 characters", false);
     setLoading("regBtn", true);
     try {
-      const res  = await fetch("http://localhost:5000/api/register", {
+      const res  = await fetch(`${API_BASE}/api/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username: u, email: e, password: p }),

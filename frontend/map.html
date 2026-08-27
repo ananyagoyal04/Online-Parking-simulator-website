@@ -22,8 +22,10 @@ function initMap() {
     });
 }
 
+const API_BASE = (window.location.protocol === "file:" || (window.location.hostname === "localhost" && window.location.port !== "5000" && window.location.port !== "")) ? "http://localhost:5000" : "";
+
 document.getElementById("searchBtn").addEventListener("click", async () => {
-    const res = await fetch("http://localhost:5000/parking/Bangalore");
+    const res = await fetch(`${API_BASE}/parking/Bangalore`);
     const spots = await res.json();
 
     spots.forEach(spot => {

@@ -1,0 +1,29 @@
+{
+  "version": 2,
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/parking/(.*)",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/gate",
+      "destination": "/frontend/gate-simulator.html"
+    },
+    {
+      "source": "/gate-simulator.html",
+      "destination": "/frontend/gate-simulator.html"
+    },
+    {
+      "source": "/",
+      "destination": "/frontend/index.html"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/frontend/$1"
+    }
+  ]
+}

@@ -179,10 +179,29 @@ Open `frontend/index.html` in any web browser (or serve with VS Code Live Server
 
 ---
 
+## ⚡ Vercel One-Click Deployment Guide
+
+This project is fully pre-configured for instant zero-configuration deployment on **Vercel**:
+
+1. Push or import this repository on [Vercel Dashboard](https://vercel.com/new).
+2. **Build & Development Settings:**
+   - **Framework Preset:** `Other`
+   - **Root Directory:** `./` (Leave default)
+   - **Build Command:** Leave empty
+   - **Output Directory:** Leave empty
+3. *(Optional)* Add Environment Variables in Vercel Project Settings:
+   - `JWT_SECRET`: `your_custom_jwt_secret`
+   - `MONGO_URI`: `mongodb+srv://...` *(If omitted, ParkWise runs in high-performance in-memory mode!)*
+4. Click **Deploy**. Vercel will automatically serve the static web app and route all `/api/*` requests through the serverless backend!
+
+---
+
 ## 📂 Project Directory Structure
 
 ```
 parking-app/
+├── api/
+│   └── index.js                   # Vercel Serverless Function entrypoint
 ├── backend/
 │   ├── config/
 │   │   ├── bangaloreAreas.js      # Curated Bangalore hubs with GPS coordinates
@@ -219,11 +238,14 @@ parking-app/
 │   └── server.js                  # Express application entrypoint
 ├── frontend/
 │   ├── dashboard.html             # Driver booking & real-time map interface
+│   ├── gate-simulator.html        # Static copy of Gate Terminal Scanner
 │   ├── index.html                 # Authentication & landing portal
 │   ├── map.html                   # Standalone Bangalore map view
 │   └── style.css
 ├── .env.example                   # Environment configuration template
 ├── .gitignore                     # Git ignore rules (node_modules, logs, etc.)
+├── package.json                   # Root package.json for Vercel builds
+├── vercel.json                    # Vercel routing & serverless configuration
 ├── presentation.md                # Project presentation slides
 └── README.md                      # Complete system documentation
 ```

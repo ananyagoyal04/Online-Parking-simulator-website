@@ -695,7 +695,7 @@
       <div class="live-dot"></div>
       <span id="locLabel">Locating…</span>
     </div>
-    <button class="hdr-btn" onclick="window.open('http://localhost:5000/gate', '_blank')" title="Open IoT Barrier Terminal Simulator">📟 Gate Terminal</button>
+    <button class="hdr-btn" onclick="window.open('gate-simulator.html', '_blank')" title="Open IoT Barrier Terminal Simulator">📟 Gate Terminal</button>
     <button class="hdr-btn" onclick="toggleTheme()" id="themeBtn">☀</button>
     <button class="hdr-btn" onclick="locateMe()">📍 My Location</button>
     <button class="hdr-btn" onclick="logout()">← Sign Out</button>
@@ -806,6 +806,9 @@
 <div class="toast-container" id="toastContainer"></div>
 
 <script>
+  // ── Dynamic API Base (Local / Vercel compatible) ──
+  const API_BASE = (window.location.protocol === "file:" || (window.location.hostname === "localhost" && window.location.port !== "5000" && window.location.port !== "")) ? "http://localhost:5000" : "";
+
   // ── Auth guard ──────────────────────────────
   const username = localStorage.getItem("pw-username");
   if (!localStorage.getItem("pw-loggedIn") || !username) {
@@ -970,7 +973,7 @@
         const q = inp.value.trim();
         if (!q) { drop.classList.remove("open"); return; }
         try {
-          const res = await fetch(`http://localhost:5000/api/search?q=${encodeURIComponent(q)}`);
+          const res = await fetch(`${API_BASE}/api/search?q=${encodeURIComponent(q)}`);
           const areas = await res.json();
           if (!areas.length) { drop.classList.remove("open"); return; }
           drop.innerHTML = areas.slice(0, 8).map(a => `
@@ -1082,7 +1085,7 @@
   async function loadSpotsAt(lat, lng, areaName) {
     try {
       const res = await fetch(
-        `http://localhost:5000/api/parking?lat=${lat}&lng=${lng}&area=${encodeURIComponent(areaName || "")}`
+        `${API_BASE}/api/parking?lat=${lat}&lng=${lng}&area=${encodeURIComponent(areaName || "")}`
       );
       const spots = await res.json();
       renderSidebar(spots, areaName);
@@ -1096,7 +1099,7 @@
   // ── My booking ──────────────────────────────
   async function checkMyBooking() {
     try {
-      const res  = await fetch(`http://localhost:5000/api/mybooking/${username}`);
+      const res  = await fetch(`${API_BASE}/api/mybooking/${username}`);
       const data = await res.json();
       currentBooking = data.booking || null;
       renderBookingCard();
@@ -1247,7 +1250,7 @@
     const bLat = lat || userLat;
     const bLng = lng || userLng;
     try {
-      const res = await fetch("http://localhost:5000/api/book", {
+      const res = await fetch(`${API_BASE}/api/book`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ lat: bLat, lng: bLng, spotId, username, area, durationHours: 1, vehicleType: "sedan" }),
@@ -1284,7 +1287,7 @@
     if (!currentBooking) return;
     if (!confirm(`Cancel booking ${currentBooking.bookingId}?`)) return;
     try {
-      const res = await fetch("http://localhost:5000/api/cancel", {
+      const res = await fetch(`${API_BASE}/api/cancel`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ bookingId: currentBooking.bookingId, username }),
@@ -1306,7 +1309,7 @@
   async function showNearestParking() {
     if (!userLat) return toast("Get location first", "err");
     try {
-      const res    = await fetch(`http://localhost:5000/api/parking?lat=${userLat}&lng=${userLng}`);
+      const res    = await fetch(`${API_BASE}/api/parking?lat=${userLat}&lng=${userLng}`);
       const spots  = await res.json();
       const empty  = spots.filter(s => s.status === "empty");
       if (!empty.length) return toast("No available spots nearby", "err");
